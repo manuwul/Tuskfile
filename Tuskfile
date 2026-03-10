@@ -25,7 +25,7 @@ COMMENT_RIGHT="'"
 LOGFORMAT="$COLOR_LOG+ @$COLOR_RESET"
 
 # ========================= LOG FUNCTION =========================
-_log() { : 'Log function execution'
+log() { : 'Log function execution'
 	local args=""
     for a in "$@"; do
         if [[ "$a" =~ [[:space:]] ]]; then
@@ -38,7 +38,6 @@ _log() { : 'Log function execution'
 	echo -e "${LOGFORMAT/@/$args}"
 	"$@"
 }
-log() { _log "$@"; }
 
 
 # ========================= YOUR TASKS =========================
