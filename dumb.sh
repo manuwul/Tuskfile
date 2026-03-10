@@ -8,7 +8,10 @@ shopt -s inherit_errexit 2>/dev/null || true
 TIMEFORMAT="Task completed in %3lR"
 COMMENT_LEFT=": '"
 COMMENT_RIGHT="'"
-
+COLOR_RESET="\e[0m"
+COLOR_ERROR="\e[38;5;196m"
+COLOR_FUNCTION="\e[38;5;165m"
+COLOR_COMMENT="\e[38;5;229m"
 
 # ========================= YOUR TASKS =========================
 _maybe() { : 'Hidden function'
@@ -39,7 +42,7 @@ help() { : 'Prints this help message'
 		[[ $body != *"$COMMENT_LEFT"*"$COMMENT_RIGHT"* ]] && body=""
 		body="${body#*$COMMENT_LEFT}"
 		body="${body%%$COMMENT_RIGHT*}"
-		printf "\t%d) \e[38;5;165m%-12s\e[0m \e[38;5;229m%s\e[0m\n" "$i" "$func_name" "$body"
+		printf "\t%d) $COLOR_FUNCTION%-12s$COLOR_RESET $COLOR_COMMENT%s$COLOR_RESET\n" "$i" "$func_name" "$body"
 		((i++)) || true
 	done
 }
@@ -50,7 +53,9 @@ task=${1:-help}
 shift || true
 
 if (! declare -F "$task" >/dev/null); then
-    echo -e "\e[38;5;196mUnknown task: $task\e[0m\n"
+	echo -en "$COLOR_ERROR"
+	echo -n "Unknown task: $task"
+	echo -e "$COLOR_RESET"
     help
     exit 1
 fi
