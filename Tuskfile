@@ -3,18 +3,47 @@
 set -euo pipefail
 shopt -s inherit_errexit 2>/dev/null || true
 
-
 # ========================= SCRIPT CONFIG =========================
+if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
+    COLOR_RESET="\033[0m"
+	COLOR_ERROR="\033[38;5;196m"
+	COLOR_FUNCTION="\033[38;5;165m"
+	COLOR_COMMENT="\033[38;5;229m"
+	COLOR_LOG="\033[38;5;247m"
+else
+    COLOR_RESET=""
+    COLOR_ERROR=""
+    COLOR_FUNCTION=""
+    COLOR_COMMENT=""
+    COLOR_LOG=""
+fi
+
+
 TIMEFORMAT="Task completed in %3lR"
 COMMENT_LEFT=": '"
 COMMENT_RIGHT="'"
-COLOR_RESET="\e[0m"
-COLOR_ERROR="\e[38;5;196m"
-COLOR_FUNCTION="\e[38;5;165m"
-COLOR_COMMENT="\e[38;5;229m"
+LOGFORMAT="$COLOR_LOG+ @$COLOR_RESET"
+
+# ========================= LOG FUNCTION =========================
+_log() { : 'Log function execution'
+	local args=""
+    for a in "$@"; do
+        if [[ "$a" =~ [[:space:]] ]]; then
+            args+="\"$a\" "
+        else
+            args+="$a "
+        fi
+    done
+
+	echo -e "${LOGFORMAT/@/$args}"
+	"$@"
+}
+log() { _log "$@"; }
+
 
 # ========================= YOUR TASKS =========================
 _maybe() { : 'Hidden function'
+	cat ./Tuskfile >/dev/null
 	return -1
 }
 
@@ -26,7 +55,8 @@ coin_toss() { : '
 }
 
 hello() { : 'Greets first argument'
-	echo "Hello, ${1:-World}!"
+	log echo "Hello, ${1:-World}!"
+	log echo "Another hello"
 }
 
 
@@ -37,7 +67,7 @@ help() { : 'Prints this help message'
 
 	local i=1
 	for func_name in $(compgen -A function); do
-		[[ "$func_name" == _* ]] && continue
+		[[ "$func_name" == _* || "$func_name" == log ]] && continue
 		local body=$(declare -f "$func_name")
 		[[ $body != *"$COMMENT_LEFT"*"$COMMENT_RIGHT"* ]] && body=""
 		body="${body#*$COMMENT_LEFT}"
@@ -46,6 +76,7 @@ help() { : 'Prints this help message'
 		((i++)) || true
 	done
 }
+
 
 
 # ========================= TASK EXECUTION =========================
