@@ -2,6 +2,7 @@
 # ========================= SHELL CONFIG =========================
 set -o pipefail
 
+
 # ========================= SCRIPT CONFIG =========================
 if [[ -t 1 ]] && [[ -z "${NO_COLOR:-}" ]]; then
     COLOR_RESET="\033[0m"
@@ -17,11 +18,11 @@ else
     COLOR_LOG=""
 fi
 
-
 TIMEFORMAT="Task completed in %3lR"
 COMMENT_LEFT=": '"
 COMMENT_RIGHT="'"
 LOGFORMAT="${COLOR_LOG}+ @${COLOR_RESET}"
+
 
 # ========================= LOG FUNCTION =========================
 log() { : 'Logs function execution'
@@ -79,10 +80,9 @@ help() { : 'Prints this help message'
 }
 
 
-
 # ========================= TASK EXECUTION =========================
 task=${1:-help}
-shift || true
+shift
 
 if (! declare -F "${task}" >/dev/null); then
 	echo -en "$COLOR_ERROR"
