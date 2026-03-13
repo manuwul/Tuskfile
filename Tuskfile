@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # ========================= SHELL CONFIG =========================
-set -euo pipefail
-shopt -s inherit_errexit 2>/dev/null || true
+set -o pipefail
 
 # ========================= SCRIPT CONFIG =========================
 if [[ -t 1 ]] && [[ -z "${NO_COLOR:-}" ]]; then
@@ -29,11 +28,12 @@ log() { : 'Logs function execution'
 	if [[ -z "${NO_LOG:-}" ]]; then
 		local args=""
     	for arg in "$@"; do
-    	    if [[ "${arg}" =~ [[:space:]] ]]; then
-    	        args+="\"${arg}\" "
+    	    if [[ "$arg" =~ [[:space:]] ]]; then
+    	        args+="\"$arg\""
     	    else
-    	        args+="${arg}"
+    	        args+="$arg"
     	    fi
+			args+=" "
     	done
 
 		echo -e "${LOGFORMAT/@/${args}}"
@@ -68,14 +68,13 @@ help() { : 'Prints this help message'
 
 	local i=1
 	for func_name in $(compgen -A function); do
-		[[ "${func_name}" == _* || "${func_name}" == log ]] && continue
-		local body
-		body=$(declare -f "${func_name}")
-		[[ "${body}" != *"${COMMENT_LEFT}"*"${COMMENT_RIGHT}"* ]] && body=""
-		body="${body#*"${COMMENT_LEFT}"}"
-		body="${body%%"${COMMENT_RIGHT}"*}"
-		printf "\t%d) ${COLOR_FUNCTION}%-12s${COLOR_RESET} ${COLOR_COMMENT}%s${COLOR_RESET}\n" "${i}" "${func_name}" "${body}"
-		((i++)) || true
+		[[ "$func_name" == _* || "$func_name" == log ]] && continue
+		local body=$(declare -f "$func_name")
+		[[ "$body" != *"$COMMENT_LEFT"*"$COMMENT_RIGHT"* ]] && body=""
+		body="${body#*"$COMMENT_LEFT"}"
+		body="${body%%"$COMMENT_RIGHT"*}"
+		printf "\t%d) $COLOR_FUNCTION%-12s$COLOR_RESET $COLOR_COMMENT%s$COLOR_RESET\n" "$i" "$func_name" "$body"
+		((i++))
 	done
 }
 
@@ -86,11 +85,11 @@ task=${1:-help}
 shift || true
 
 if (! declare -F "${task}" >/dev/null); then
-	echo -en "${COLOR_ERROR}"
-	echo -n "Unknown task: ${task}"
-	echo -e "${COLOR_RESET}"
+	echo -en "$COLOR_ERROR"
+	echo -n "Unknown task: $task"
+	echo -e "$COLOR_RESET"
     help
     exit 1
 fi
 
-time ${task} "$@"
+time $task "$@"
