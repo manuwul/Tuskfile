@@ -37,7 +37,7 @@ task=${1:-default_task}
 `NO_COLOR=1 Tuskfile my_task`
 
 ```bash
-if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
+if [[ -t 1 ]] && [[ -z "${NO_COLOR:-}" ]]; then
     COLOR_RESET="\033[0m"
 	COLOR_ERROR="my ansi escape color sequence"
 	COLOR_FUNCTION="my ansi escape color sequence"
@@ -57,11 +57,11 @@ fi
 TIMEFORMAT="Task completed in %3lR"
 COMMENT_LEFT=": '"
 COMMENT_RIGHT="'" # comment format < : 'My comment' >
-LOGFORMAT="$COLOR_LOG+ @$COLOR_RESET" # log format <+ command "arg 1" arg2>
+LOGFORMAT="${COLOR_LOG}+ @${COLOR_RESET}" # log format: + command "arg 1" arg2
 ```
 
 # Compatibility
-Pretty sure it is compatible with bash 3.x and if you manage to install bash on Windows it might work there too.
+Pretty sure it is compatible with bash 3.x and if you manage to install bash on Windows via cygwin it might work there too.
 
 # Inspiration
 This script is heavily inspired by `adriancooney/Taskfile` and fork `polyrand/Taskfile`
