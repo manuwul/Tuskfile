@@ -57,7 +57,7 @@ fi
 TIMEFORMAT="Task completed in %3lR"
 COMMENT_LEFT=": '"
 COMMENT_RIGHT="'" # comment format < : 'My comment' >
-LOGFORMAT="${COLOR_LOG}+ @${COLOR_RESET}" # log format: + command "arg 1" arg2
+LOGFORMAT="$COLOR_LOG+ @$COLOR_RESET" # log format: + command "arg 1" arg2
 ```
 
 # Compatibility
