@@ -4,7 +4,7 @@ set -euo pipefail
 shopt -s inherit_errexit 2>/dev/null || true
 
 # ========================= SCRIPT CONFIG =========================
-if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
+if [[ -t 1 ]] && [[ -z "${NO_COLOR:-}" ]]; then
     COLOR_RESET="\033[0m"
 	COLOR_ERROR="\033[38;5;196m"
 	COLOR_FUNCTION="\033[38;5;165m"
@@ -22,20 +22,22 @@ fi
 TIMEFORMAT="Task completed in %3lR"
 COMMENT_LEFT=": '"
 COMMENT_RIGHT="'"
-LOGFORMAT="$COLOR_LOG+ @$COLOR_RESET"
+LOGFORMAT="${COLOR_LOG}+ @${COLOR_RESET}"
 
 # ========================= LOG FUNCTION =========================
 log() { : 'Logs function execution'
-	local args=""
-    for a in "$@"; do
-        if [[ "$a" =~ [[:space:]] ]]; then
-            args+="\"$a\" "
-        else
-            args+="$a "
-        fi
-    done
+	if [[ -z "${NO_LOG:-}" ]]; then
+		local args=""
+    	for arg in "$@"; do
+    	    if [[ "${arg}" =~ [[:space:]] ]]; then
+    	        args+="\"${arg}\" "
+    	    else
+    	        args+="${arg}"
+    	    fi
+    	done
 
-	echo -e "${LOGFORMAT/@/$args}"
+		echo -e "${LOGFORMAT/@/${args}}"
+	fi
 	"$@"
 }
 
@@ -43,7 +45,7 @@ log() { : 'Logs function execution'
 # ========================= YOUR TASKS =========================
 _maybe() { : 'Hidden function'
 	cat ./Tuskfile >/dev/null
-	return -1
+	return 255
 }
 
 coin_toss() { : '
@@ -66,12 +68,13 @@ help() { : 'Prints this help message'
 
 	local i=1
 	for func_name in $(compgen -A function); do
-		[[ "$func_name" == _* || "$func_name" == log ]] && continue
-		local body=$(declare -f "$func_name")
-		[[ $body != *"$COMMENT_LEFT"*"$COMMENT_RIGHT"* ]] && body=""
-		body="${body#*$COMMENT_LEFT}"
-		body="${body%%$COMMENT_RIGHT*}"
-		printf "\t%d) $COLOR_FUNCTION%-12s$COLOR_RESET $COLOR_COMMENT%s$COLOR_RESET\n" "$i" "$func_name" "$body"
+		[[ "${func_name}" == _* || "${func_name}" == log ]] && continue
+		local body
+		body=$(declare -f "${func_name}")
+		[[ "${body}" != *"${COMMENT_LEFT}"*"${COMMENT_RIGHT}"* ]] && body=""
+		body="${body#*"${COMMENT_LEFT}"}"
+		body="${body%%"${COMMENT_RIGHT}"*}"
+		printf "\t%d) ${COLOR_FUNCTION}%-12s${COLOR_RESET} ${COLOR_COMMENT}%s${COLOR_RESET}\n" "${i}" "${func_name}" "${body}"
 		((i++)) || true
 	done
 }
@@ -82,12 +85,12 @@ help() { : 'Prints this help message'
 task=${1:-help}
 shift || true
 
-if (! declare -F "$task" >/dev/null); then
-	echo -en "$COLOR_ERROR"
-	echo -n "Unknown task: $task"
-	echo -e "$COLOR_RESET"
+if (! declare -F "${task}" >/dev/null); then
+	echo -en "${COLOR_ERROR}"
+	echo -n "Unknown task: ${task}"
+	echo -e "${COLOR_RESET}"
     help
     exit 1
 fi
 
-time $task "$@"
+time ${task} "$@"
