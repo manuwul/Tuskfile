@@ -1,9 +1,14 @@
 #!/usr/bin/env bash
-# ========================= SHELL CONFIG =========================
-set -o pipefail
 
+# === SCRIPT CONFIGS ===
+IGNOREFORMAT=(
+	"_*"
+	"log"
+	"default"
+)
 
-# ========================= SCRIPT CONFIG =========================
+TIMEFORMAT="Task completed in %3lR"
+
 if [[ -t 1 ]] && [[ -z "${NO_COLOR:-}" ]]; then
     COLOR_RESET="\033[0m"
 	COLOR_ERROR="\033[38;5;196m"
@@ -18,78 +23,88 @@ else
     COLOR_LOG=""
 fi
 
-TIMEFORMAT="Task completed in %3lR"
-COMMENT_LEFT=": '"
-COMMENT_RIGHT="'"
-LOGFORMAT="${COLOR_LOG}+ @${COLOR_RESET}"
+
+# === TASKS ===
+fourth() {
+	return 0
+}
+
+third_() { : "third?"
+	return 1
+}
+
+third() { : 'third'
+	log fourth "Hello world"
+}
+
+second() { : "Second"
+	log third "b" && log third_ "c"
+}
+
+first() { : 'first'
+	log second "a"
+}
 
 
-# ========================= LOG FUNCTION =========================
-log() { : 'Logs function execution'
+# === DEFAULT ===
+default() {
+	help
+}
+
+
+# === LOG + HELP ===
+log() {
 	if [[ -z "${NO_LOG:-}" ]]; then
-		local args=""
-    	for arg in "$@"; do
-    	    if [[ "$arg" =~ [[:space:]] ]]; then
-    	        args+="\"$arg\""
-    	    else
-    	        args+="$arg"
-    	    fi
-			args+=" "
+		local depth=-1
+		for func_name in "${FUNCNAME[@]}"; do
+        	[[ "$func_name" == "log" ]] && ((depth++))
     	done
 
-		echo -e "${LOGFORMAT/@/${args}}"
+		local args=""
+		for arg in "$@"; do
+			[[ "$arg" == *" "* ]] && arg="\"$arg\""
+			args+="$arg "
+		done
+		
+		local prefix=$(printf "%${depth}s" "")
+		printf "${COLOR_LOG}%s %s${COLOR_RESET}\n" "${prefix// /| }+" "$args"
 	fi
+
 	"$@"
 }
 
-
-# ========================= YOUR TASKS =========================
-_maybe() { : 'Hidden function'
-	cat ./Tuskfile >/dev/null
-	return 255
-}
-
-coin_toss() { : '
-	Returns -1 or 1 (almost) randomly
-	!!!MULTILINE COMMENT!!!
-'
-	_maybe
-}
-
-hello() { : 'Greets first argument'
-	log echo "Hello, ${1:-World}!"
-	log echo "Another hello"
-}
-
-
-# ========================= HELP FUNCTION =========================
-help() { : 'Prints this help message'
-	echo "Usage: $0 <task> <args>"
+help() { : "This is help"
+	echo "Usage: $0 <task> [args]"
 	echo "Tasks:"
-
+	
+	# function name is always one word without space
 	local i=1
 	for func_name in $(compgen -A function); do
-		[[ "$func_name" == _* || "$func_name" == log ]] && continue
-		local body=$(declare -f "$func_name")
-		[[ "$body" != *"$COMMENT_LEFT"*"$COMMENT_RIGHT"* ]] && body=""
-		body="${body#*"$COMMENT_LEFT"}"
-		body="${body%%"$COMMENT_RIGHT"*}"
-		printf "\t%d) $COLOR_FUNCTION%-12s$COLOR_RESET $COLOR_COMMENT%s$COLOR_RESET\n" "$i" "$func_name" "$body"
-		((i++))
+		local skip=0
+
+		for glob in "${IGNOREFORMAT[@]}"; do case "$func_name" in $glob) skip=1 && break ;; esac done
+		[[ $skip == 1 ]] && continue
+
+		local func_body=$(declare -f "$func_name")
+		[[ "$func_body" != *": "[\'\"]*[\'\"]* ]] && func_body=""
+		func_body="${func_body#*": "[\'\"]}"
+		func_body="${func_body%%[\'\"]*}"
+		
+		printf "\t%d) ${COLOR_FUNCTION}%-12s${COLOR_RESET} ${COLOR_COMMENT}%s${COLOR_RESET}\n" "$((i++))" "$func_name" "$func_body"
 	done
 }
 
 
-# ========================= TASK EXECUTION =========================
-task=${1:-help}
+# === MAIN ===
+# task is always one word without space
+task=${1:-default}
 shift
 
-if (! declare -F "${task}" >/dev/null); then
-	echo -en "$COLOR_ERROR"
-	echo -n "Unknown task: $task"
-	echo -e "$COLOR_RESET"
-    help
-    exit 1
+# check if task exists
+if ! (declare -F "${task}" >/dev/null); then
+	printf "${COLOR_ERROR}Unknown task: %s${COLOR_RESET}\n" "${task}"
+	help
+	exit 1
 fi
 
 time $task "$@"
