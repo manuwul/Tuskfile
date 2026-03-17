@@ -17,13 +17,17 @@ my_task() { : 'Does something'
 ```
 
 ### Log commands
+`Tuskfile log first`
 ```bash
-another_task() {
-    log foo bar buzz
-    log echo "Log me!"
-}
+first
+┣━second a
+┃ ┣━third b
+┃ ┃ ┗━fourth "Hello world"
+┃ ┗━third_ c
+┗━third
+  ┗━fourth "Hello world"
+Task completed in 0m0.002s
 ```
-
 ### Get automatic help
 `Tuskfile help`
 
