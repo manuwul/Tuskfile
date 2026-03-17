@@ -25,6 +25,10 @@ fi
 
 
 # ========== TASKS ==========
+final() { : "Final func"
+	return 0
+}
+
 fourth() {
 	return 0
 }
@@ -43,6 +47,7 @@ second() { : "Second"
 
 first() { : 'first'
 	log second "a"
+	log third
 }
 
 
@@ -53,24 +58,49 @@ default() {
 
 
 # ========== LOG + HELP ==========
+depths=()
 log() { : "Logs function execution in pretty format"
-	if [[ -z "${NO_LOG:-}" ]]; then
-		local depth=0
+	if [[ -t 1 ]] && [[ -z "${NO_LOG:-}" ]]; then
+		local depth=-1
 		for func_name in "${FUNCNAME[@]}"; do
         	[[ "$func_name" == "log" ]] && ((depth++))
     	done
 
 		local args=""
 		for arg in "$@"; do
-			[[ "$arg" == *" "* ]] && arg="\"$arg\""
-			args+="$arg "
+    		if [[ "$arg" == *" "* ]]; then
+        		args+="\"$arg\" "
+    		else
+        		args+="$arg "
+    		fi
 		done
 		
+		local prefix=$(printf "%$(( (depth) * 2 ))s" "")
+		prefix="${prefix/%  /┗━}"
+		printf "${COLOR_LOG}%s%s${COLOR_RESET}\n" "$prefix" "$args"
 		
-		local prefix=$(printf "%$(( (depth - 1) * 2 ))s" "")
-		printf "${COLOR_LOG}%s %s${COLOR_RESET}\n" "${prefix//  /| }+" "$args"
+		if (( "$depth" != 0 )); then
+			printf "\033[2A\033[$(( depth * 2 - 1 ))G"
+			
+			local i=$((${#depths[@]} - 1))
+			for (( i; i >= 0; i-- )); do
+				if (( ${depths[$i]} > $depth )); then
+					printf "${COLOR_LOG}┃${COLOR_RESET}\033[1D\033[1A"
+					continue
+				fi
+				
+				if (( ${depths[$i]} == $depth )); then
+					printf "${COLOR_LOG}┣${COLOR_RESET}"
+				fi
+				break
+			done
+
+			printf "\033[$(( ${#depths[@]} - i + 1 ))E"
+		fi
+		depths+=("$depth")
 	fi
 
+		
 	"$@"
 }
 
@@ -78,7 +108,6 @@ help() { : "Shows this help message"
 	echo "Usage: $0 <task> [args]"
 	echo "Tasks:"
 	
-	# function name is always one word without space
 	local i=1
 	for func_name in $(compgen -A function); do
 		local skip=0

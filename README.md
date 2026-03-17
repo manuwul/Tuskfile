@@ -29,35 +29,26 @@ another_task() {
 
 ### Set default task
 ```bash
-# ========================= TASK EXECUTION =========================
-task=${1:-default_task}
+default() {
+	log help
+}
 ```
 
 ### Change or disable colors (and other text decorations)
 `NO_COLOR=1 Tuskfile my_task`
 
-```bash
-if [[ -t 1 ]] && [[ -z "${NO_COLOR:-}" ]]; then
-    COLOR_RESET="\033[0m"
-	COLOR_ERROR="my ansi escape color sequence"
-	COLOR_FUNCTION="my ansi escape color sequence"
-	COLOR_COMMENT="my ansi escape color sequence"
-	COLOR_LOG="my ansi escape color sequence"
-else
-    COLOR_RESET=""
-    COLOR_ERROR=""
-    COLOR_FUNCTION=""
-    COLOR_COMMENT=""
-    COLOR_LOG=""
-fi
-```
+### Disable logs
+`NO_LOG=1 Tuskfile my_task`
 
-### Change time, comment and log format
+### Change time and ignore format
 ```bash
+IGNOREFORMAT=(
+	"_*"
+	"log"
+	"default"
+)
+
 TIMEFORMAT="Task completed in %3lR"
-COMMENT_LEFT=": '"
-COMMENT_RIGHT="'" # comment format < : 'My comment' >
-LOGFORMAT="$COLOR_LOG+ @$COLOR_RESET" # log format: + command "arg 1" arg2
 ```
 
 # Compatibility
