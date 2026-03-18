@@ -21,7 +21,8 @@ my_task() { : "Optional function description"
 }
 ```
 
-`FANCY_LOG` makes logs ... well, _fancy_
+`FANCY_LOG` makes logs ... well, _fancy_  
+
 Normal logs from `./Tuskfile log first`
 ```
 + first
@@ -32,6 +33,7 @@ Normal logs from `./Tuskfile log first`
   + third
     + fourth "Hello world"
 ```
+
 _FaNcY_ logs from `FANCY_LOG=1 ./Tuskfile log first`. Only works in when not piped or redirected, though
 ```
 first
@@ -45,7 +47,7 @@ first
 
 If you don't want logs at all, just add `NO_LOG=1` befor starting task
 
-You can also change log format by editing (no way!) `LOGFORMAT`, but such customization is very limited
+You can also change log format by editing (no way!) `LOGFORMAT`, but such customization is very limited  
 Example: removed indent, changed `+` to `~>`
 ```bash
 LOGFORMAT="%.s~> %s"
@@ -80,7 +82,7 @@ _my_func() {
 ```
 
 ## change colo(u)rs?
-Just change `COLOR_*` in code. Colo(u)rs are simply [ANSI ESCAPE SEQUENCES](https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797) (fnky/ANSI.md).
+Just change `COLOR_*` in code. Colo(u)rs are simply [ANSI ESCAPE SEQUENCES](https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797) (fnky/ANSI.md)  
 Colo(u)rs are disabled when piped or disabled or `NO_COLOR` is set (like `NO_LOG`)
 
 # Compatibility
