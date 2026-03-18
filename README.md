@@ -86,7 +86,10 @@ Just change `COLOR_*` in code. Colo(u)rs are simply [ANSI ESCAPE SEQUENCES](http
 Colo(u)rs are disabled when piped or disabled or `NO_COLOR` is set (like `NO_LOG`)
 
 # Compatibility
-Tested with bash 5.x only (TODO: check for older bash)
+Tested with bash:
+- 5.x
+- 3.2.57
+(TODO: check for older bash)
 
 # Inspiration
 This script is heavily inspired by `adriancooney/Taskfile` and fork `polyrand/Taskfile`
