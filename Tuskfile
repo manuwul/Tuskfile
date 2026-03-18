@@ -1,14 +1,23 @@
 #!/usr/bin/env bash
 
 # ========== SCRIPT CONFIGS ==========
+# Disabled by default
+FANCY_LOG="${FANCY_LOG:-}"	
+
+# Globs of ignored function names
 IGNOREFORMAT=(
 	"_*"
 	"log"
 	"default"
 )
 
+# Format for `time` command output
 TIMEFORMAT="Task completed in %3lR"
 
+# Format for logs. First argument is indent (depth * 2), second - function name with args
+LOGFORMAT="%s+ %s"
+
+# Default `NO_COLOR` convention
 if [[ -t 1 ]] && [[ -z "${NO_COLOR:-}" ]]; then
     COLOR_RESET="\033[0m"
 	COLOR_ERROR="\033[38;5;196m"
@@ -52,15 +61,15 @@ first() { : 'first'
 
 
 # ========== DEFAULT ==========
-default() {
+default() { : "Default task"
 	log help
 }
 
 
 # ========== LOG + HELP ==========
 depths=()
-log() { : "Logs function execution in pretty format"
-	if [[ -t 1 ]] && [[ -z "${NO_LOG:-}" ]]; then
+log() { : "Logs function execution in normal or fancy format"
+	if [[ -z "${NO_LOG:-}" ]]; then
 		local depth=-1
 		for func_name in "${FUNCNAME[@]}"; do
         	[[ "$func_name" == "log" ]] && ((depth++))
@@ -74,30 +83,36 @@ log() { : "Logs function execution in pretty format"
         		args+="$arg "
     		fi
 		done
-		
-		local prefix=$(printf "%$(( (depth) * 2 ))s" "")
-		prefix="${prefix/%  /┗━}"
-		printf "${COLOR_LOG}%s%s${COLOR_RESET}\n" "$prefix" "$args"
-		
-		if (( "$depth" != 0 )); then
-			printf "\033[2A\033[$(( depth * 2 - 1 ))G"
+	
+		if [[ -t 1 ]] && [[ -n "${FANCY_LOG:-}" ]]; then
+			# shellcheck disable=SC2155
+			local prefix=$(printf "%$(( depth * 2 ))s" "")
+			prefix="${prefix/%  /┗━}"
+			printf "${COLOR_LOG}%s%s${COLOR_RESET}\n" "$prefix" "$args"
 			
-			local i=$((${#depths[@]} - 1))
-			for (( i; i >= 0; i-- )); do
-				if (( ${depths[$i]} > $depth )); then
-					printf "${COLOR_LOG}┃${COLOR_RESET}\033[1D\033[1A"
-					continue
-				fi
+			if (( "$depth" != 0 )); then
+				printf "%b%b" "\033[2A" "\033[$(( depth * 2 - 1 ))G"
 				
-				if (( ${depths[$i]} == $depth )); then
-					printf "${COLOR_LOG}┣${COLOR_RESET}"
-				fi
-				break
-			done
-
-			printf "\033[$(( ${#depths[@]} - i + 1 ))E"
+				local i=$((${#depths[@]} - 1))
+				for (( i; i >= 0; i-- )); do
+					if (( ${depths[$i]} > depth )); then
+						printf "%b┃%b%b%b" "${COLOR_LOG}" "${COLOR_RESET}" "\033[1D" "\033[1A"
+						continue
+					fi
+					
+					if (( ${depths[$i]} == depth )); then
+						printf "%b┣%b" "${COLOR_LOG}" "${COLOR_RESET}"
+					fi
+					break
+				done
+	
+				printf "%b" "\033[$(( ${#depths[@]} - i + 1 ))E"
+			fi
+			depths+=("$depth")
+		else
+			# shellcheck disable=SC2059
+			printf "${COLOR_LOG}${LOGFORMAT}${COLOR_RESET}\n" "$(printf "%*s" $(( depth * 2 )) "" )" "$args"
 		fi
-		depths+=("$depth")
 	fi
 
 		
@@ -105,22 +120,24 @@ log() { : "Logs function execution in pretty format"
 }
 
 help() { : "Shows this help message"
-	echo "Usage: $0 <task> [args]"
-	echo "Tasks:"
+	printf "Usage: %s <task> [args]\n" "$0"
+	printf "Tasks:\n"
 	
 	local i=1
 	for func_name in $(compgen -A function); do
 		local skip=0
 
+		# shellcheck disable=SC2254
 		for glob in "${IGNOREFORMAT[@]}"; do case "$func_name" in $glob) skip=1 && break ;; esac done
 		[[ $skip == 1 ]] && continue
 
+		# shellcheck disable=SC2155
 		local func_body=$(declare -f "$func_name")
 		[[ "$func_body" != *": "[\'\"]*[\'\"]* ]] && func_body=""
 		func_body="${func_body#*": "[\'\"]}"
 		func_body="${func_body%%[\'\"]*}"
 		
-		printf "\t%d) ${COLOR_FUNCTION}%-12s${COLOR_RESET} ${COLOR_COMMENT}%s${COLOR_RESET}\n" "$((i++))" "$func_name" "$func_body"
+		printf "\t%d) %b%-12s%b %b%s%b\n" "$((i++))" "${COLOR_FUNCTION}" "$func_name" "${COLOR_RESET}" "${COLOR_COMMENT}" "$func_body" "${COLOR_RESET}"
 	done
 }
 
@@ -129,9 +146,9 @@ help() { : "Shows this help message"
 task="${1:-default}"
 shift
 
-# check if task exists
+# Check if task exists
 if ! (declare -F "${task}" >/dev/null); then
-	printf "${COLOR_ERROR}Unknown task: %s${COLOR_RESET}\n" "${task}"
+	printf "%bUnknown task: %s%b\n" "${COLOR_ERROR}" "${task}" "${COLOR_RESET}"
 	help
 	exit 127
 fi
