@@ -87,7 +87,8 @@ Colo(u)rs are disabled when piped or disabled or `NO_COLOR` is set (like `NO_LOG
 
 # Compatibility
 Tested with bash:
-- 5.x
+- 5.3.9
+- 5.2.37 Git Bash on Windows 10
 - 3.2.57
 (TODO: check for older bash)
 
